@@ -1,3 +1,4 @@
+# coding=utf-8
 import pyautogui
 from enum import Enum
 from PIL import ImageGrab
@@ -6,7 +7,6 @@ import random
 
 # Массив кнопок
 rects = []
-
 
 # Названия кнопок и соответствующие id в массиве rect
 class RectTypes(Enum):
@@ -20,7 +20,6 @@ class RectTypes(Enum):
     OPEN_BUTTON = 8
     HOME = 9  # Кнопка "Домашний экран"
 
-
 class Rect:
     def __init__(self, x, y, width, height):
         self.x = x
@@ -33,29 +32,24 @@ def click(rectType):
     # Type checking
     if not isinstance(rectType, RectTypes):
         raise TypeError('not a instance of RectTypes')
-    rect = rects[rectType.value]
+    rect = rects[rectType]
     clickX = random.randomrange(rect.x, rect.x + rect.width, 1)
     clickY = random.randrange(rect.y, rect.y + rect.height, 1)
     pyautogui.click(clickX, clickY)
-
 
 # Задержка секунды + случайное от 0.0 до 7.0 секунд
 def randomSleep(defaultSeconds):
     sleep(defaultSeconds + random.uniform(0, 7))
 
-
 # Ложные клики с задержкой
 def fakeActivity():
     pass  # TODO
 
-
 def checkAdShowing():
     return True  # TODO
 
-
 def checkAdPreviouslyClicked():
     return False  # TODO
-
 
 def checkDownloadAvailable():
     return True  # TODO
@@ -64,9 +58,8 @@ def checkDownloadAvailable():
 def checkIsDownloaded():
     return True  # TODO
 
-
 def watchAd():
-    randomSleep()
+    randomSleep(0)
 
     isAdShowing = False
     while (isAdShowing == False):
