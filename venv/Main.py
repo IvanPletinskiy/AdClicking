@@ -5,22 +5,7 @@ from PIL import ImageGrab
 from time import sleep
 import random
 
-# Массив кнопок
-rects = []
-
-# Названия кнопок и соответствующие id в массиве rect
-class RectTypes(Enum):
-    DEVICE = 1  # Девайс в списке устройств GenyMotion
-    VPN_APP = 2  # Иконка VPN на главном экране
-    START_VPN = 3  # Кнопка подключится к VPN
-    APP = 4  # Иконка приложения на главном экране
-    AD_BUTTON = 5  # Кнопка "Смотреть рекламу в основном приложении"
-    INSTALL_BUTTON = 6
-    DOWNLOAD_BUTTON = 7
-    OPEN_BUTTON = 8
-    HOME = 9  # Кнопка "Домашний экран"
-
-class Rect:
+class Rectangle:
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
@@ -28,82 +13,125 @@ class Rect:
         self.height = height
 
 
-def click(rectType):
-    # Type checking
-    if not isinstance(rectType, RectTypes):
-        raise TypeError('not a instance of RectTypes')
-    rect = rects[rectType]
-    clickX = random.randomrange(rect.x, rect.x + rect.width, 1)
-    clickY = random.randrange(rect.y, rect.y + rect.height, 1)
-    pyautogui.click(clickX, clickY)
+#class for giving us button rectangle coordinates
+class Rectangles():
+    #constant dictionary with binded rectangles
+    rects = {
+        'GenyMotionDevice': Rectangle(0, 0, 0, 0),
+        'VpnApp': Rectangle(0, 0, 0, 0),
+        'StartVpn': Rectangle(0, 0, 0, 0),
+        'AppIcon': Rectangle(0, 0, 0, 0),
+        'AdButton': Rectangle(0, 0, 0, 0),
+        'InstallButton': Rectangle(0, 0, 0, 0),
+        'DownloadButton': Rectangle(0, 0, 0, 0),
+        'OpenButton': Rectangle(0, 0, 0, 0),
+        'Home': Rectangle(0, 0, 0, 0)
+    }
 
-# Задержка секунды + случайное от 0.0 до 7.0 секунд
-def randomSleep(defaultSeconds):
-    sleep(defaultSeconds + random.uniform(0, 7))
-
-# Ложные клики с задержкой
-def fakeActivity():
-    pass  # TODO
-
-def checkAdShowing():
-    return True  # TODO
-
-def checkAdPreviouslyClicked():
-    return False  # TODO
-
-def checkDownloadAvailable():
-    return True  # TODO
+    #method for giving us coordinates
+    @classmethod
+    def getCoordinates(cls, name):
+        if name in cls.rects:
+            return (cls.rects[name])
+        else:
+            raise TypeError(f"there is no {name} in Rectangles.rects")
 
 
-def checkIsDownloaded():
-    return True  # TODO
+#class for every device
+class Device:
+    #get started with a new device
+    def __init__(self):
+        self.click("GenyMotionDevice")
+        self.randomSleep(100)
+        self.click("VpnApp")
+        self.randomSleep(10)
+        self.click("StartVpn")
+        self.randomSleep(10)
+        self.click("Home")
+        self.randomSleep(4)
+        self.click("App")
+        self.randomSleep(4)
 
-def watchAd():
-    randomSleep(0)
+    #click on the button in random position
+    def click(self, name):
+        rect = Rectangles.getCoordinates(name)
+        x = random.uniform(rect.x, rect.x + rect.width)
+        y = random.uniform(rect.y, rect.y + rect.height)
+        pyautogui.click(x, y)
 
-    isAdShowing = False
-    while (isAdShowing == False):
-        click(RectTypes.AD_BUTTON)
-        randomSleep(3)
-        isAdShowing = checkAdShowing()
-    randomSleep(35)
+    def randomSleep(self, default):
+        sleep(default + random.uniform(1, 7))
 
-    # Если это объявление уже было скачано
-    if (checkAdPreviouslyClicked()):
-        pass
-    click(RectTypes.INSTALL_BUTTON)
-    randomSleep(5)
-    # Если невозможно скачать
-    if (checkDownloadAvailable() == False):
-        pass
-    click(RectTypes.DOWNLOAD_BUTTON)
-    isDownloaded = False
-    while (isDownloaded == False):
-        isDownloaded = checkIsDownloaded()
-        randomSleep(10)
+    #fake clicks with a random delay
+    def fakeActivity(self):
+        pass  # TODO
 
-    click(RectTypes.OPEN_BUTTON)
-    randomSleep(5)
-    fakeActivity()
-    click(RectTypes.HOME)
-    click(RectTypes.APP)
-    fakeActivity()
+    #check if the video is going on
+    def checkAdShowing(self):
+        return True  # TODO
 
+    #check if we clicked on this ad
+    def checkAdPreviouslyClicked(self):
+        return False  # TODO
 
-def initialize():
-    click(RectTypes.DEVICE)
-    sleep(60)
-    click(RectTypes.VPN_APP)
-    sleep(10)
-    click(RectTypes.START_VPN)
-    sleep(10)
-    click(RectTypes.HOME)
-    sleep(4)
-    click(RectTypes.APP)
-    sleep(4)
+    #check if we can download it in google play
+    def checkDownloadAvailable(self):
+        return True  # TODO
+
+    #check if downloading is over
+    def checkIsDownloaded(self):
+        return True  # TODO
+
+    #main method for watching ad
+    def watchAd(self):
+        self.randomSleep(0)
+
+        #wait for the ad to start
+        self.isAdShowing = False
+        while not self.isAdShowing:
+            self.click("AdButton")
+            self.randomSleep(3)
+            self.isAdShowing = self.checkAdShowing()
+
+        #wait for the ad to end
+        while self.isAdShowing:
+            self.randomSleep(5)
+            self.isAdShowing = self.checkAdShowing()
+
+        #check if we downloaded this previously
+        if (self.checkAdPreviouslyClicked()):
+            pass
+
+        #install
+        self.click("InstallButton")
+        self.randomSleep(5)
+
+        #if we cannot download it
+        if not self.checkDownloadAvailable():
+            pass
+
+        #download
+        self.click("DownloadButton")
+        self.isDownloaded = False
+
+        #wait for the app to download and install
+        while not self.isDownloaded:
+            self.isDownloaded = self.checkIsDownloaded()
+            self.randomSleep(10)
+
+        #do some fake actions
+        self.click("OpenButton")
+        self.randomSleep(5)
+        self.fakeActivity()
+
+        #close app, do some fake actions in 'Cherkash'
+        self.click("Home")
+        self.click("AppIcon")
+        self.fakeActivity()
+
 
 
 if __name__ == '__main__':
-    initialize()
+    firstDevice = Device()
     while True:
-        watchAd()
+        firstDevice.watchAd()
