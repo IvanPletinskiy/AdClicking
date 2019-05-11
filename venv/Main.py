@@ -130,7 +130,6 @@ class Device:
         self.fakeActivity()
 
 
-
 if __name__ == '__main__':
     firstDevice = Device()
     while True:
