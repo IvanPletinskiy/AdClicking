@@ -5,6 +5,7 @@ from enum import Enum
 from PIL import ImageGrab
 from time import sleep
 import random
+import logging
 
 
 class Rectangle:
@@ -20,14 +21,18 @@ class Rectangles:
     # constant dictionary with binded rectangles
     rects = {
         'GenyMotionDevice': Rectangle(0, 0, 0, 0),
-        'VpnApp': Rectangle(0, 0, 0, 0),
-        'StartVpn': Rectangle(0, 0, 0, 0),
-        'AppIcon': Rectangle(0, 0, 0, 0),
-        'AdButton': Rectangle(0, 0, 0, 0),
-        'InstallButton': Rectangle(0, 0, 0, 0),
-        'DownloadButton': Rectangle(0, 0, 0, 0),
-        'OpenButton': Rectangle(0, 0, 0, 0),
-        'Home': Rectangle(0, 0, 0, 0)
+        'VpnApp': Rectangle(110, 251, 38, 37),
+        'Vpn1': Rectangle(468, 112, 9, 6),
+        'Vpn2': Rectangle(300, 158, 60, 8),
+        'Vpn3': Rectangle(28, 615, 172, 18),
+        'AppIcon': Rectangle(32, 245, 17, 49),
+        'AdButton': Rectangle(400, 92, 9, 5),
+        'InstallGooglePlay': Rectangle(356, 274, 108, 23),  #
+        # 'DownloadButton': Rectangle(0, 0, 0, 0),
+        'OpenGooglePlay': Rectangle(264, 274, 196, 18),
+        'Home': Rectangle(0, 0, 0, 0),
+        'AppCloseAd': Rectangle(479, 78, 6, 9),
+        'DeviceBackButton': Rectangle(21, 981, 28, 14)
     }
 
     # method for giving us coordinates
@@ -43,6 +48,9 @@ class Rectangles:
 class Device:
     # get started with a new device
     def __init__(self):
+        """
+        #Вылетело на SetForegroundWindow #FIXME
+        #Ошибка: pywintypes.error: (0, 'SetForegroundWindow', 'No error message is available')
         self.hwnd = win32gui.FindWindow(None, "BlueStacks")
         win32gui.SetForegroundWindow(self.hwnd)
         dimensions = win32gui.GetWindowRect(self.hwnd)
@@ -51,19 +59,26 @@ class Device:
         self.y = dimensions[1]
         self.w = dimensions[2] - self.x
         self.h = dimensions[3] - self.y
-
+        """
         """
         self.click("GenyMotionDevice")
         self.randomSleep(100)
+        """
         self.click("VpnApp")
         self.randomSleep(10)
-        self.click("StartVpn")
-        self.randomSleep(10)
-        self.click("Home")
+        self.click("Vpn1")
+        self.randomSleep(3)
+        self.click("Vpn2")
+        self.randomSleep(3)
+        self.click("Vpn3")
+        self.randomSleep(1)
+
+       # self.click("Home")
+        self.click("DeviceBackButton")
+        #self.click("DeviceBackButton")
+        self.randomSleep(7)
+        self.click("AppIcon")
         self.randomSleep(4)
-        self.click("App")
-        self.randomSleep(4)
-        """
 
     # click on the button in random position
     @staticmethod
@@ -72,10 +87,13 @@ class Device:
         x = random.uniform(rect.x, rect.x + rect.width)
         y = random.uniform(rect.y, rect.y + rect.height)
         pyautogui.click(x, y)
+        print("Click: " + name + " " + str(int(x)) + " " + str(int(y)))
 
     @staticmethod
-    def randomSleep(default):
-        sleep(default + random.uniform(1, 7))
+    def randomSleep(default) :
+        rand = default + random.uniform(1, 3)
+        print(str(int(rand)))
+        sleep(rand)
 
     # fake clicks with a random delay
     def fakeActivity(self):
@@ -133,7 +151,7 @@ class Device:
             pass
 
         # install
-        self.click("InstallButton")
+        self.click("InstallGooglePlay")
         self.randomSleep(5)
 
         # if we cannot download it
@@ -150,7 +168,7 @@ class Device:
             self.randomSleep(10)
 
         # do some fake actions
-        self.click("OpenButton")
+        self.click("OpenGooglePlay")
         self.randomSleep(5)
         self.fakeActivity()
 
