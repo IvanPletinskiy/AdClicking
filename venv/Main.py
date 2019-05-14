@@ -1,4 +1,5 @@
 # coding=utf-8
+import numpy
 import pyautogui
 import win32gui
 from enum import Enum
@@ -92,7 +93,7 @@ class Device:
         win32gui.SetForegroundWindow(self.hwnd)
         self.image = ImageGrab.grab((self.x, self.y, self.x + self.w, self.y + self.h))
         # self.image.show()
-        self.pixels = self.image.load()
+        self.pixels = numpy.array(self.image.getdata()).reshape(self.image.size[0], self.image.size[1], 3)
 
     # check if the video is going on
     def checkAdShowing(self):
@@ -102,9 +103,17 @@ class Device:
         self.getScreen()
         img2 = self.pixels
 
-        if img1 != img2:
-            return True
-        return False
+        res = False
+        for i in range(len(img1)):
+            for j in range(len(img1[i])):
+                for clr in range(3):
+                    if img1[i, j, clr] != img2[i, j, clr]:
+                        res = True
+                        break
+
+        print("CheckAdShowing =", res)
+
+        return res
 
     # check if we clicked on this ad
     def checkAdPreviouslyClicked(self):
