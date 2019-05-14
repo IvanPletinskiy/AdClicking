@@ -12,28 +12,27 @@ class Rectangle:
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
-        self.width = width
-        self.height = height
+        self.width = width - x
+        self.height = height - y
 
 
 # class for giving us button rectangle coordinates
 class Rectangles:
     # constant dictionary with binded rectangles
-    resolution = ()
     rects = {
-        'GenyMotionDevice': Rectangle(0, 0, 0, 0),
-        'VpnApp': Rectangle(110, 251, 38, 37),
-        'Vpn1': Rectangle(468, 112, 9, 6),
-        'Vpn2': Rectangle(300, 158, 60, 8),
-        'Vpn3': Rectangle(28, 615, 172, 18),
-        'AppIcon': Rectangle(32, 245, 17, 49),
-        'AdButton': Rectangle(400, 92, 9, 5),
-        'InstallGooglePlay': Rectangle(356, 274, 108, 23),  #
-        # 'DownloadButton': Rectangle(0, 0, 0, 0),
-        'OpenGooglePlay': Rectangle(264, 274, 196, 18),
-        'Home': Rectangle(0, 0, 0, 0),
-        'AppCloseAd': Rectangle(479, 78, 6, 9),
-        'DeviceBackButton': Rectangle(21, 981, 28, 14)
+        'BlueStacksDevice': Rectangle(0, 0, 0, 0),  # TODO
+        'VpnApp': Rectangle(110, 251, 38, 37),  # TODO
+        'Vpn1': Rectangle(468, 112, 9, 6),  # TODO
+        'Vpn2': Rectangle(300, 158, 60, 8),  # TODO
+        'Vpn3': Rectangle(28, 615, 172, 18),  # TODO
+        'AppIcon': Rectangle(75, 240, 105, 289),
+        'AdButton': Rectangle(403, 72, 415, 100),
+        'InstallGooglePlay': Rectangle(356, 274, 108, 23),  # TODO
+        'DownloadButton': Rectangle(0, 0, 0, 0),  # TODO
+        'OpenGooglePlay': Rectangle(264, 274, 196, 18),  # TODO
+        'Home': Rectangle(0, 0, 0, 0),  # TODO
+        'AppCloseAd': Rectangle(479, 78, 6, 9),  # TODO
+        'DeviceBackButton': Rectangle(21, 981, 28, 14)  # TODO
     }
 
     # method for giving us coordinates
@@ -49,39 +48,26 @@ class Rectangles:
 class Device:
     # get started with a new device
     def __init__(self):
-
-        #Вылетело на SetForegroundWindow #FIXME
-        #Ошибка: pywintypes.error: (0, 'SetForegroundWindow', 'No error message is available')
         self.hwnd = win32gui.FindWindow(None, "BlueStacks")
         win32gui.SetForegroundWindow(self.hwnd)
         dimensions = win32gui.GetWindowRect(self.hwnd)
+        self.x = min(1407, dimensions[0])
+        self.y = min(30, dimensions[1])
+        self.w = 490
+        self.h = 970
+        win32gui.MoveWindow(self.hwnd, self.x, self.y, self.x + self.w, self.y + self.h, True)
+        dimensions = win32gui.GetWindowRect(self.hwnd)
+
+        print("Dimensions =", dimensions)
 
         self.x = dimensions[0]
         self.y = dimensions[1]
         self.w = dimensions[2] - self.x
         self.h = dimensions[3] - self.y
 
-        """
-        self.click("GenyMotionDevice")
-        self.randomSleep(100)
-        """
-        """
-        self.click("VpnApp")
-        self.randomSleep(10)
-        self.click("Vpn1")
-        self.randomSleep(3)
-        self.click("Vpn2")
-        self.randomSleep(3)
-        self.click("Vpn3")
-        self.randomSleep(1)
-
-        # self.click("Home")
-        self.click("DeviceBackButton")
-        # self.click("DeviceBackButton")
-        self.randomSleep(7)
+        # TODO open VPN
         self.click("AppIcon")
         self.randomSleep(4)
-        """
 
     # click on the button in random position
     def click(self, name):
@@ -105,7 +91,7 @@ class Device:
     def getScreen(self):
         win32gui.SetForegroundWindow(self.hwnd)
         self.image = ImageGrab.grab((self.x, self.y, self.x + self.w, self.y + self.h))
-        self.image.show()
+        # self.image.show()
         self.pixels = self.image.load()
 
     # check if the video is going on
@@ -180,7 +166,22 @@ class Device:
         self.fakeActivity()
 
 
+# function for debbuging and finding rectangles
+def mouseTrack():
+    from pynput.mouse import Button, Controller
+
+    mouse = Controller()
+    from time import sleep
+
+    while True:
+        print(mouse.position[0] - 1392, mouse.position[1] - 30)
+        sleep(2)
+
+
 if __name__ == '__main__':
+
+    # mouseTrack()
+
     firstDevice = Device()
     while True:
         firstDevice.watchAd()
