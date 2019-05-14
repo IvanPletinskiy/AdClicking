@@ -19,6 +19,7 @@ class Rectangle:
 # class for giving us button rectangle coordinates
 class Rectangles:
     # constant dictionary with binded rectangles
+    resolution = ()
     rects = {
         'GenyMotionDevice': Rectangle(0, 0, 0, 0),
         'VpnApp': Rectangle(110, 251, 38, 37),
@@ -48,7 +49,7 @@ class Rectangles:
 class Device:
     # get started with a new device
     def __init__(self):
-        """
+
         #Вылетело на SetForegroundWindow #FIXME
         #Ошибка: pywintypes.error: (0, 'SetForegroundWindow', 'No error message is available')
         self.hwnd = win32gui.FindWindow(None, "BlueStacks")
@@ -59,10 +60,11 @@ class Device:
         self.y = dimensions[1]
         self.w = dimensions[2] - self.x
         self.h = dimensions[3] - self.y
-        """
+
         """
         self.click("GenyMotionDevice")
         self.randomSleep(100)
+        """
         """
         self.click("VpnApp")
         self.randomSleep(10)
@@ -73,26 +75,26 @@ class Device:
         self.click("Vpn3")
         self.randomSleep(1)
 
-       # self.click("Home")
+        # self.click("Home")
         self.click("DeviceBackButton")
-        #self.click("DeviceBackButton")
+        # self.click("DeviceBackButton")
         self.randomSleep(7)
         self.click("AppIcon")
         self.randomSleep(4)
+        """
 
     # click on the button in random position
-    @staticmethod
-    def click(name):
+    def click(self, name):
         rect = Rectangles.getCoordinates(name)
         x = random.uniform(rect.x, rect.x + rect.width)
         y = random.uniform(rect.y, rect.y + rect.height)
-        pyautogui.click(x, y)
+        pyautogui.click(self.x + x, self.y + y)
         print("Click: " + name + " " + str(int(x)) + " " + str(int(y)))
 
     @staticmethod
     def randomSleep(default) :
         rand = default + random.uniform(1, 3)
-        print(str(int(rand)))
+        print("Random Sleep (" + str(int(rand)) + ")")
         sleep(rand)
 
     # fake clicks with a random delay
@@ -103,7 +105,7 @@ class Device:
     def getScreen(self):
         win32gui.SetForegroundWindow(self.hwnd)
         self.image = ImageGrab.grab((self.x, self.y, self.x + self.w, self.y + self.h))
-        # self.image.show()
+        self.image.show()
         self.pixels = self.image.load()
 
     # check if the video is going on
