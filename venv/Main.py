@@ -2,12 +2,10 @@
 import numpy
 import pyautogui
 import win32gui
-from enum import Enum
 from PIL import ImageGrab
 from time import sleep
 import random
-import logging
-
+from pynput.mouse import Button, Controller
 
 class Rectangle:
     def __init__(self, x, y, width, height):
@@ -26,8 +24,8 @@ class Rectangles:
         'Vpn1': Rectangle(468, 112, 9, 6),  # TODO
         'Vpn2': Rectangle(300, 158, 60, 8),  # TODO
         'Vpn3': Rectangle(28, 615, 172, 18),  # TODO
-        'AppIcon': Rectangle(75, 240, 105, 289),
-        'AdButton': Rectangle(403, 72, 415, 100),
+        'AppIcon': Rectangle(80, 245, 100, 280),
+        'AdButton': Rectangle(408, 80, 413, 90),
         'InstallGooglePlay': Rectangle(356, 274, 108, 23),  # TODO
         'DownloadButton': Rectangle(0, 0, 0, 0),  # TODO
         'OpenGooglePlay': Rectangle(264, 274, 196, 18),  # TODO
@@ -46,9 +44,11 @@ class Rectangles:
 
 
 # class for every device
+
 class Device:
     # get started with a new device
-    def __init__(self):
+    def __init__(self, deviceId):
+        self.id = deviceId
         self.hwnd = win32gui.FindWindow(None, "BlueStacks")
         win32gui.SetForegroundWindow(self.hwnd)
         dimensions = win32gui.GetWindowRect(self.hwnd)
@@ -56,7 +56,7 @@ class Device:
         self.y = min(30, dimensions[1])
         self.w = 490
         self.h = 970
-        win32gui.MoveWindow(self.hwnd, self.x, self.y, self.x + self.w, self.y + self.h, True)
+     #   win32gui.MoveWindow(self.hwnd, self.x, self.y, self.x + self.w, self.y + self.h, True)
         dimensions = win32gui.GetWindowRect(self.hwnd)
 
         print("Dimensions =", dimensions)
@@ -66,9 +66,7 @@ class Device:
         self.w = dimensions[2] - self.x
         self.h = dimensions[3] - self.y
 
-        # TODO open VPN
         self.click("AppIcon")
-        self.randomSleep(4)
 
     # click on the button in random position
     def click(self, name):
@@ -78,8 +76,14 @@ class Device:
         pyautogui.click(self.x + x, self.y + y)
         print("Click: " + name + " " + str(int(x)) + " " + str(int(y)))
 
+    def clickCoordinates(self, x, y, w, h):
+        x = random.uniform(x, x + w)
+        y = random.uniform(y, y + h)
+        pyautogui.click(self.x + x, self.y + y)
+        print("Click: AdInstall " + str(int(x)) + " " + str(int(y)))
+
     @staticmethod
-    def randomSleep(default) :
+    def randomSleep(default):
         rand = default + random.uniform(1, 3)
         print("Random Sleep (" + str(int(rand)) + ")")
         sleep(rand)
@@ -119,6 +123,85 @@ class Device:
     def checkAdPreviouslyClicked(self):
         return False  # TODO
 
+    def saveAd(self):
+        self.getScreen()
+        img = self.pixels
+        centerY = (self.y + self.h) / 2
+        centerX = (self.x + self.w) / 2
+
+    def findAndClickInstallButton(self):
+        self.getScreen()
+        img = self.pixels
+        #Находим зелёные кнопки
+        for i in range(len(img)):
+            for j in range(len(img[i])):
+                #Чек на пиксель зелёный
+                if(self.checkPixelGreen(img, i, j)):
+                    pixelY = i
+                    pixelX = j
+                    width = 0
+                    height = 0
+                    x = j
+                    y = i
+                    #Проверка пикселей по горизонтали
+                    for x in range(len(img[i])):
+                        if(self.checkPixelGreen(img, pixelY, x)):
+                            j = j + 1
+                            width = width + 1
+                        else:
+                            break
+                    # Проверка пикселей по вертикали
+                    for y in range(len(img)):
+                        if (self.checkPixelGreen(img, y, pixelX)):
+                                    height = height + 1
+                        else:
+                            break
+                    if(width + height < 70):
+                        continue
+                    self.clickCoordinates(pixelX, pixelY, width, height)
+                    return
+
+        #Находим красные кнопки
+        for i in range(len(img)):
+            for j in range(len(img[i])):
+                #Чек на пиксель красный
+                if(self.checkPixelRed(img, i, j)):
+                    pixelY = i
+                    pixelX = j
+                    width = 0
+                    height = 0
+                    x = j
+                    y = i
+                    #Проверка пикселей по горизонтали
+                    for x in range(len(img[i])):
+                        if(self.checkPixelRed(img, pixelY, x)):
+                            j = j + 1
+                            width = width + 1
+                        else:
+                            break
+                    # Проверка пикселей по вертикали
+                    for y in range(len(img)):
+                        if (self.checkPixelRed(img, y, pixelX)):
+                                    height = height + 1
+                        else:
+                            break
+                    if(width + height < 70):
+                        continue
+                    self.clickCoordinates(pixelX, pixelY, width, height)
+                    return
+
+        self.clickCoordinates((self.x  + self.w) / 2, (self.y  + self.h) / 2, 50, 50)
+
+    def checkPixelGreen(self, img, y, x):
+        if (img[y, x, 0] < 200 and img[y, x, 1] > 240 and img[y, x, 2] < 200):
+            return True
+        return False
+
+    def checkPixelRed(self, img, y, x):
+        if (img[y, x, 0] > 240 and img[y, x, 1] < 200 and img[y, x, 2] < 200):
+            return True
+        return False
+
     # check if we can download it in google play
     def checkDownloadAvailable(self):
         return True  # TODO
@@ -146,7 +229,7 @@ class Device:
         # check if we downloaded this previously
         if self.checkAdPreviouslyClicked():
             pass
-
+        self.findAndClickInstallButton()
         # install
         self.click("InstallGooglePlay")
         self.randomSleep(5)
@@ -177,7 +260,6 @@ class Device:
 
 # function for debbuging and finding rectangles
 def mouseTrack():
-    from pynput.mouse import Button, Controller
 
     mouse = Controller()
     from time import sleep
@@ -188,9 +270,7 @@ def mouseTrack():
 
 
 if __name__ == '__main__':
-
-    # mouseTrack()
-
-    firstDevice = Device()
+    #mouseTrack()
+    firstDevice = Device(0)
     while True:
         firstDevice.watchAd()
