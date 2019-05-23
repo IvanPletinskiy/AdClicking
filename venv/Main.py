@@ -56,16 +56,13 @@ class Device:
         self.y = min(30, dimensions[1])
         self.w = 490
         self.h = 970
-     #   win32gui.MoveWindow(self.hwnd, self.x, self.y, self.x + self.w, self.y + self.h, True)
-        dimensions = win32gui.GetWindowRect(self.hwnd)
-
-        print("Dimensions =", dimensions)
-
-        self.x = dimensions[0]
-        self.y = dimensions[1]
-        self.w = dimensions[2] - self.x
-        self.h = dimensions[3] - self.y
-
+        # win32gui.MoveWindow(self.hwnd, self.x, self.y, self.x + self.w, self.y + self.h, True)
+        # dimensions = win32gui.GetWindowRect(self.hwnd)
+        # print("Dimensions =", dimensions)
+        # self.x = dimensions[0]
+        # self.y = dimensions[1]
+        # self.w = dimensions[2] - self.x
+        # self.h = dimensions[3] - self.y
         self.click("AppIcon")
 
     # click on the button in random position
@@ -76,9 +73,9 @@ class Device:
         pyautogui.click(self.x + x, self.y + y)
         print("Click: " + name + " " + str(int(x)) + " " + str(int(y)))
 
-    def clickCoordinates(self, x, y, w, h):
-        x = random.uniform(x, x + w)
-        y = random.uniform(y, y + h)
+    def clickCoordinates(self, _x, _y, _w, _h):
+        x = random.uniform(_x, _x + _w)
+        y = random.uniform(_y, _y + _h)
         pyautogui.click(self.x + x, self.y + y)
         print("Click: AdInstall " + str(int(x)) + " " + str(int(y)))
 
@@ -136,58 +133,40 @@ class Device:
         for i in range(len(img)):
             for j in range(len(img[i])):
                 #Чек на пиксель зелёный
-                if(self.checkPixelGreen(img, i, j)):
-                    pixelY = i
-                    pixelX = j
-                    width = 0
-                    height = 0
-                    x = j
-                    y = i
-                    #Проверка пикселей по горизонтали
-                    for x in range(len(img[i])):
-                        if(self.checkPixelGreen(img, pixelY, x)):
-                            j = j + 1
-                            width = width + 1
-                        else:
+                if self.checkPixelGreen(img, i, j):
+                    widthB = 1
+                    heightB = 1
+                    for i1 in range(i + 1, len(img)):
+                        if not self.checkPixelGreen(img, i1, j):
                             break
-                    # Проверка пикселей по вертикали
-                    for y in range(len(img)):
-                        if (self.checkPixelGreen(img, y, pixelX)):
-                                    height = height + 1
-                        else:
+                        heightB += 1
+                    for j1 in range(j + 1, len(img[i])):
+                        if not self.checkPixelGreen(img, i, j1):
                             break
-                    if(width + height < 70):
+                        widthB += 1
+                    if(widthB + heightB < 70):
                         continue
-                    self.clickCoordinates(pixelX, pixelY, width, height)
+                    self.clickCoordinates(i, j, widthB, heightB)
                     return
 
         #Находим красные кнопки
         for i in range(len(img)):
             for j in range(len(img[i])):
                 #Чек на пиксель красный
-                if(self.checkPixelRed(img, i, j)):
-                    pixelY = i
-                    pixelX = j
-                    width = 0
-                    height = 0
-                    x = j
-                    y = i
-                    #Проверка пикселей по горизонтали
-                    for x in range(len(img[i])):
-                        if(self.checkPixelRed(img, pixelY, x)):
-                            j = j + 1
-                            width = width + 1
-                        else:
+                if self.checkPixelGreen(img, i, j):
+                    widthB = 1
+                    heightB = 1
+                    for i1 in range(i + 1, len(img)):
+                        if not self.checkPixelGreen(img, i1, j):
                             break
-                    # Проверка пикселей по вертикали
-                    for y in range(len(img)):
-                        if (self.checkPixelRed(img, y, pixelX)):
-                                    height = height + 1
-                        else:
+                        heightB += 1
+                    for j1 in range(j + 1, len(img[i])):
+                        if not self.checkPixelGreen(img, i, j1):
                             break
-                    if(width + height < 70):
+                        widthB += 1
+                    if (widthB + heightB < 70):
                         continue
-                    self.clickCoordinates(pixelX, pixelY, width, height)
+                    self.clickCoordinates(i, j, widthB, heightB)
                     return
 
         self.clickCoordinates((self.x  + self.w) / 2, (self.y  + self.h) / 2, 50, 50)
@@ -265,7 +244,7 @@ def mouseTrack():
     from time import sleep
 
     while True:
-        print(mouse.position[0] - 1392, mouse.position[1] - 30)
+        print(mouse.position[0], mouse.position[1])
         sleep(2)
 
 
