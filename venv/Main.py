@@ -29,6 +29,9 @@ class Rectangles:
         'Vpn3': Rectangle(28, 615, 172, 18),  # TODO
         'AppIcon': Rectangle(80, 245, 100, 280),
         'AdButton': Rectangle(408, 80, 413, 90),
+        'GooglePlay1': Rectangle(444, 488, 471, 493),
+        'GooglePlay2': Rectangle(365, 273, 462, 287),
+
         'InstallGooglePlay': Rectangle(356, 274, 108, 23),  # TODO
         'DownloadButton': Rectangle(0, 0, 0, 0),  # TODO
         'OpenGooglePlay': Rectangle(264, 274, 196, 18),  # TODO
@@ -111,19 +114,47 @@ class Device:
                         break
 
         print("CheckAdShowing =", res)
-
         return res
 
     # check if we clicked on this ad
     def checkAdPreviouslyClicked(self):
-        return False  # TODO
-
-    def saveAd(self):
         self.getScreen()
         img = self.pixels
         centerY = (self.y + self.h) / 2
         centerX = (self.x + self.w) / 2
-        # TODO
+        rgbPixels = [0, 0, 0]
+        for y in range(int(centerY - 100), int(centerY + 100)):
+            for x in range(int(centerX - 50), int(centerX + 50)):
+                for i in range(3):
+                    if (img[y, x, i] > 240):
+                        rgbPixels[i] += 1
+
+        filePath = "C:\\AdClicking\\" + str(self.id) + ".txt"
+
+        file = open(filePath, "r")
+        lines = file.readlines()
+        file.close()
+        if len(lines) == 0:
+            self.saveAd(rgbPixels)
+        else:
+            for line in lines:
+                pixels = line.split(";")
+                equals = True
+                for i in range(3):
+                    if (rgbPixels[i] != pixels[i]):
+                        equals = False
+                        break
+                if equals:
+                    return True
+                else:
+                    self.saveAd(rgbPixels)
+                    return False
+
+    def saveAd(self, rgbPixels):
+        filePath = "C:\\AdClicking\\" + str(self.id) + ".txt"
+        file = open(filePath, "a+")
+        file.write("\n" + str(rgbPixels[0]) + ";" + str(rgbPixels[1]) + ";" + str(rgbPixels[2]))
+        file.close()
 
     def showDebugPic(self, x, y, w, h):
         self.getScreen()
@@ -152,11 +183,12 @@ class Device:
                         if not self.checkPixelGreen(img, i, j1):
                             break
                         widthB += 1
-                    if widthB + heightB < 200 or not self.greenPixelsAmountInside(img, j, i, widthB, heightB) > widthB * heightB * 0.7:
+                    if widthB + heightB < 150 or self.greenPixelsAmountInside(img, j, i, widthB,
+                                                                              heightB) < widthB * heightB * 0.7:
                         continue
                     print(f"Found green button on {j, i, widthB, heightB}")
                     self.clickCoordinates(j, i, widthB, heightB)
-                    self.showDebugPic(j, i, widthB, heightB)
+                    # self.showDebugPic(j, i, widthB, heightB)
                     return
 
         # Находим красные кнопки
@@ -174,16 +206,17 @@ class Device:
                         if not self.checkPixelGreen(img, i, j1):
                             break
                         widthB += 1
-                    if widthB + heightB < 200 or not self.redPixelsAmountInside(img, j, i, widthB, heightB) > widthB * heightB * 0.7:
+                    if widthB + heightB < 150 or self.redPixelsAmountInside(img, j, i, widthB,
+                                                                            heightB) < widthB * heightB * 0.7:
                         continue
                     print(f"Found red button on {j, i, widthB, heightB}")
                     self.clickCoordinates(j, i, widthB, heightB)
-                    self.showDebugPic(j, i, widthB, heightB)
+                    # self.showDebugPic(j, i, widthB, heightB)
                     return
 
         # Находим голубые кнопки
-        for i in range(len(img)):
-            for j in range(len(img[i])):
+        for i in range(2, len(img)):
+            for j in range(2, len(img[i])):
                 # Чек на пиксель голубой
                 if self.checkPixelBlue(img, i, j):
                     widthB = 1
@@ -196,13 +229,13 @@ class Device:
                         if not self.checkPixelBlue(img, i, j1):
                             break
                         widthB += 1
-                    if widthB + heightB < 200 or not self.bluePixelsAmountInside(img, j, i, widthB, heightB) > widthB * heightB * 0.7:
+                    if widthB + heightB < 200 or self.bluePixelsAmountInside(img, j, i, widthB,
+                                                                             heightB) < widthB * heightB * 0.7:
                         continue
                     print(f"Found blue button on {j, i, widthB, heightB}")
                     self.clickCoordinates(j, i, widthB, heightB)
-                    self.showDebugPic(j, i, widthB, heightB)
+                    # self.showDebugPic(j, i, widthB, heightB)
                     return
-
 
         print(f"Didn't find anything, click on the center")
         self.clickCoordinates(self.w // 2, self.h // 2, 50, 50)
@@ -232,19 +265,37 @@ class Device:
         return cnt
 
     def checkPixelGreen(self, img, y, x):
-        if int(img[y, x, 1]) - int(img[y, x, 0]) >= 50 and int(img[y, x, 1]) >= 150 and int(img[y, x, 1]) - int(img[y, x, 2]) >= 50:
+        if int(img[y, x, 1]) - int(img[y, x, 0]) >= 50 and int(img[y, x, 1]) >= 150 and int(img[y, x, 1]) - int(
+                img[y, x, 2]) >= 50:
             return True
         return False
 
     def checkPixelRed(self, img, y, x):
-        if int(img[y, x, 0]) >= 150 and int(img[y, x, 0]) - int(img[y, x, 1]) >= 50 and int(img[y, x, 0]) - int(img[y, x, 2]) >= 50:
+        if int(img[y, x, 0]) >= 150 and int(img[y, x, 0]) - int(img[y, x, 1]) >= 50 and int(img[y, x, 0]) - int(
+                img[y, x, 2]) >= 50:
             return True
         return False
 
     def checkPixelBlue(self, img, y, x):
-        if int(img[y, x, 2]) - int(img[y, x, 0]) >= 50 and int(img[y, x, 2]) - int(img[y, x, 1]) >= 50 and int(img[y, x, 2]) >= 150:
+        if int(img[y, x, 2]) - int(img[y, x, 0]) >= 50 and int(img[y, x, 2]) - int(img[y, x, 1]) >= 50 and int(
+                img[y, x, 2]) >= 150:
             return True
         return False
+
+    def clickGooglePlayDownload(self):
+        self.getScreen()
+        img = self.pixels
+        if (img[200, 50, 0] == 0 and img[200, 50, 1] == 0 and img[200, 50, 0] == 2 and
+                img[250, 150, 0] == 0 and img[250, 150, 0] == 0 and img[250, 150, 0] == 0 and
+                img[700, 50, 0] == 0 and img[700, 50, 1] == 0 and img[700, 50, 2] == 0 and
+                img[700, 300, 0] == 0 and img[700, 300, 1] == 0 and img[700, 300, 2] == 0):
+            # Альбомная ориентация
+            self.click("GooglePlay1")
+        else:
+            if (img[530, 20, 0] == 255 and img[530, 20, 1] == 255 and img[530, 20, 2] == 255 and
+                img[280, 364, 0] == 1 and img[280, 364, 1] == 135 and img[280, 364, 2] == 95):
+                #Портретная ориентация
+                self.click("GooglePlay2")
 
     # check if we can download it in google play
     def checkDownloadAvailable(self):
@@ -256,8 +307,6 @@ class Device:
 
     # main method for watching ad
     def watchAd(self):
-        self.randomSleep(0)
-
         # wait for the ad to start
         isAdShowing = False
         while not isAdShowing:
@@ -266,22 +315,24 @@ class Device:
             isAdShowing = self.checkAdShowing()
 
         # Doesn't work with gifs
-        
+
         # # wait for the ad to end
         # while isAdShowing:
         #     self.randomSleep(5)
         #     isAdShowing = self.checkAdShowing()
-        
-        self.randomSleep(40)
 
+        self.randomSleep(40)
 
         # check if we downloaded this previously
         if self.checkAdPreviouslyClicked():
+            print("Ad previously clicked.")
             return
 
         self.findAndClickInstallButton()
         self.randomSleep(3)
+
         # install
+        """
         self.click("InstallGooglePlay")
         self.randomSleep(5)
 
@@ -291,6 +342,7 @@ class Device:
 
         # download
         self.click("DownloadButton")
+        """
         isDownloaded = False
 
         # wait for the app to download and install
@@ -311,7 +363,6 @@ class Device:
 
 # function for debugging and finding rectangles
 def mouseTrack():
-
     mouse = Controller()
     from time import sleep
 
